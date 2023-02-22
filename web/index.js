@@ -1,4 +1,5 @@
 // @ts-check
+import 'dotenv/config';
 import { join } from "path";
 import { readFileSync } from "fs";
 import express from "express";
@@ -35,6 +36,7 @@ app.use("/api/*", shopify.validateAuthenticatedSession());
 app.use(express.json());
 
 app.get("/api/products/count", async (_req, res) => {
+  console.log(process.env)
   const countData = await shopify.api.rest.Product.count({
     session: res.locals.shopify.session,
   });
