@@ -8,6 +8,7 @@ import serveStatic from "serve-static";
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
 import GDPRWebhookHandlers from "./gdpr.js";
+import axios from 'axios'
 
 const PORT = parseInt(process.env.BACKEND_PORT || process.env.PORT, 10);
 
@@ -36,7 +37,6 @@ app.use("/api/*", shopify.validateAuthenticatedSession());
 app.use(express.json());
 
 app.get("/api/products/count", async (_req, res) => {
-  console.log(process.env)
   const countData = await shopify.api.rest.Product.count({
     session: res.locals.shopify.session,
   });
@@ -56,6 +56,32 @@ app.get("/api/products/create", async (_req, res) => {
   }
   res.status(status).send({ success: status === 200, error });
 });
+
+app.get("/api/instagram/posts", async(_req, res) => {
+  axios({
+    method:'get',
+    url: `https://graph.instagram.com/me/media?fields=id,media_type,media_url,caption&access_token=${process.env.REACT_APP_INSTAGRAM_TOKEN}`,
+    responseType: "json"
+  }).then((response) => {
+    res.status(200).send(response.data);
+  }).catch(error => {
+    res.status(500).send(error)
+  })  
+})
+
+app.post("/api/instagram/next_posts", async(_req, res) => {
+  console.log(_req.body, "body")
+  const next_page = _req.body.next
+  axios({
+    method:'get',
+    url: next_page,
+    responseType: "json"
+  }).then((response) => {
+    res.status(200).send(response.data);
+  }).catch(error => {
+    res.status(500).send(error)
+  })  
+})
 
 app.use(serveStatic(STATIC_PATH, { index: false }));
 
